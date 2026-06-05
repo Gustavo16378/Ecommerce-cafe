@@ -128,7 +128,7 @@ public class CarrinhoServiceImpl {
 
         CheckoutResponseDTO response = new CheckoutResponseDTO();
         response.setPedidoId(pedido.getId());
-        response.setStatusPedido(pedido.getStatus());
+        response.setStatusPedido("APROVADO".equals(pagamento.getStatus()) ? "CONFIRMADO" : "AGUARDANDO_PAGAMENTO");
         response.setStatusPagamento(pagamento.getStatus());
         response.setEnderecoEntrega(enderecoFormatado);
         response.setDataEntregaPrevista(pedido.getDataEntregaPrevista());
