@@ -64,7 +64,7 @@ public class CarrinhoResourceTest {
 
         Number produtoId = getProdutoId();
 
-        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
+        given().contentType(ContentType.JSON).when().post("/carrinho/" + produtoId + "?quantidade=1");
         given()
             .when().post("/carrinho/" + produtoId + "?quantidade=2")
             .then()
@@ -82,7 +82,7 @@ public class CarrinhoResourceTest {
 
         Number produtoId = getProdutoId();
 
-        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
+        given().contentType(ContentType.JSON).when().post("/carrinho/" + produtoId + "?quantidade=1");
 
         given()
             .when().delete("/carrinho/" + produtoId)
@@ -105,9 +105,9 @@ public class CarrinhoResourceTest {
 
         Number produtoId = getProdutoId();
 
-        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
+        given().contentType(ContentType.JSON).when().post("/carrinho/" + produtoId + "?quantidade=1");
 
-        given().when().delete("/carrinho").then().statusCode(204);
+        given().contentType(ContentType.JSON).when().delete("/carrinho").then().statusCode(204);
 
         given()
             .when().get("/carrinho")
@@ -126,7 +126,7 @@ public class CarrinhoResourceTest {
 
         Number produtoId = getProdutoId();
 
-        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
+        given().contentType(ContentType.JSON).when().post("/carrinho/" + produtoId + "?quantidade=1");
 
         given()
             .contentType(ContentType.JSON)

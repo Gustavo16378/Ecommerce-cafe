@@ -6,6 +6,7 @@ import br.unitins.topicos1.cafe.mapper.UsuarioMapper;
 import br.unitins.topicos1.cafe.model.EnderecoCliente;
 import br.unitins.topicos1.cafe.model.Perfil;
 import br.unitins.topicos1.cafe.model.Usuario;
+import br.unitins.topicos1.cafe.repository.EnderecoClienteRepository;
 import br.unitins.topicos1.cafe.repository.UsuarioRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,6 +14,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,9 @@ public class UsuarioServiceImpl {
 
     @Inject
     UsuarioMapper mapper;
+
+    @Inject
+    EnderecoClienteRepository enderecoRepository;
 
     public List<UsuarioResponseDTO> listar() {
         return repository.listAll().stream()
@@ -144,6 +149,8 @@ public class UsuarioServiceImpl {
         endereco.setCep(dto.cep());
         endereco.setComplemento(dto.complemento());
         endereco.setUsuario(usuario);
+        enderecoRepository.persist(endereco);
+        if (usuario.getEnderecos() == null) usuario.setEnderecos(new ArrayList<>());
         usuario.getEnderecos().add(endereco);
         return toEnderecoDTO(endereco);
     }
