@@ -1,6 +1,7 @@
 package br.unitins.topicos1.cafe.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -20,6 +21,8 @@ public class Usuario {
     private String cpf;
     private String email;
     private String telefone;
+    private String tokenRecuperacao;
+    private LocalDateTime tokenExpiracao;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EnderecoCliente> enderecos;
@@ -67,6 +70,12 @@ public class Usuario {
 
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }
+
+    public String getTokenRecuperacao() { return tokenRecuperacao; }
+    public void setTokenRecuperacao(String tokenRecuperacao) { this.tokenRecuperacao = tokenRecuperacao; }
+
+    public LocalDateTime getTokenExpiracao() { return tokenExpiracao; }
+    public void setTokenExpiracao(LocalDateTime tokenExpiracao) { this.tokenExpiracao = tokenExpiracao; }
 
     public List<EnderecoCliente> getEnderecos() { return enderecos; }
     public void setEnderecos(List<EnderecoCliente> enderecos) { this.enderecos = enderecos; }

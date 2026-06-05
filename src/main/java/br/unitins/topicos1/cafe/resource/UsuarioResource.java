@@ -83,13 +83,22 @@ public class UsuarioResource {
         return Response.noContent().build();
     }
 
-    // Esqueceu a senha (sem autenticação)
+    // Esqueceu a senha — envia token por email (sem autenticação)
     @PATCH
     @Path("/esqueceu-senha")
     @PermitAll
     public Response esqueceuSenha(@Valid EsqueceuSenhaRequestDTO dto) {
         String mensagem = service.esqueceuSenha(dto);
         return Response.ok(mensagem).build();
+    }
+
+    // Redefine a senha usando o token recebido por email
+    @PATCH
+    @Path("/redefinir-senha")
+    @PermitAll
+    public Response redefinirSenha(@Valid RedefinirSenhaRequestDTO dto) {
+        service.redefinirSenha(dto);
+        return Response.noContent().build();
     }
 
     // Editar dados do próprio perfil (usuário logado)

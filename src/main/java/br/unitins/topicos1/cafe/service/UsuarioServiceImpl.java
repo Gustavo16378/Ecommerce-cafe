@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -80,12 +81,24 @@ public class UsuarioServiceImpl {
     public String esqueceuSenha(EsqueceuSenhaRequestDTO dto) {
         Usuario usuario = repository.findByEmail(dto.email());
         if (usuario == null) throw new NotFoundException("Email não cadastrado");
-        // Gera senha temporária e atualiza
-        String senhaTemp = UUID.randomUUID().toString().substring(0, 8);
-        usuario.setSenha(BcryptUtil.bcryptHash(senhaTemp));
-        // Em produção: enviar via SMTP (Jakarta Mail) um link com token de redefinição
-        // Aqui retornamos a senha temp para fins de demonstração
-        return "Instruções enviadas para " + dto.email() + " — senha temporária: " + senhaTemp;
+        String token = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        usuario.setTokenRecuperacao(token);
+        usuario.setTokenExpiracao(LocalDateTime.now().plusMinutes(30));
+        // Em produção: envia via SMTP (Jakarta Mail) link com o token
+        // Retornamos o token aqui apenas para demonstração
+        return "Email enviado para " + dto.email() + " — token (válido 30min): " + token;
+    }
+
+    @Transactional
+    public void redefinirSenha(RedefinirSenhaRequestDTO dto) {
+        Usuario usuario = repository.find("tokenRecuperacao", dto.token()).firstResult();
+        if (usuario == null)
+            throw new ValidationException("Token inválido ou inexistente", "token");
+        if (usuario.getTokenExpiracao().isBefore(LocalDateTime.now()))
+            throw new ValidationException("Token expirado. Solicite um novo.", "token");
+        usuario.setSenha(BcryptUtil.bcryptHash(dto.novaSenha()));
+        usuario.setTokenRecuperacao(null);
+        usuario.setTokenExpiracao(null);
     }
 
     @Transactional
