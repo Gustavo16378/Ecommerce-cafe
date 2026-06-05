@@ -1,5 +1,6 @@
 package br.unitins.topicos1.cafe.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -7,6 +8,8 @@ public class PedidoResponseDTO {
     private Long id;
     private LocalDateTime dataPedido;
     private String status;
+    private String enderecoEntrega;
+    private LocalDate dataEntregaPrevista;
     private List<ItemPedidoResponseDTO> itens;
     private Double total;
 
@@ -18,6 +21,12 @@ public class PedidoResponseDTO {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getEnderecoEntrega() { return enderecoEntrega; }
+    public void setEnderecoEntrega(String enderecoEntrega) { this.enderecoEntrega = enderecoEntrega; }
+
+    public LocalDate getDataEntregaPrevista() { return dataEntregaPrevista; }
+    public void setDataEntregaPrevista(LocalDate dataEntregaPrevista) { this.dataEntregaPrevista = dataEntregaPrevista; }
 
     public List<ItemPedidoResponseDTO> getItens() { return itens; }
     public void setItens(List<ItemPedidoResponseDTO> itens) { this.itens = itens; }

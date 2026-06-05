@@ -1,8 +1,6 @@
 package br.unitins.topicos1.cafe.service;
 
-import br.unitins.topicos1.cafe.dto.CarrinhoResponseDTO;
-import br.unitins.topicos1.cafe.dto.ItemCarrinhoResponseDTO;
-import br.unitins.topicos1.cafe.dto.PedidoResponseDTO;
+import br.unitins.topicos1.cafe.dto.*;
 import br.unitins.topicos1.cafe.exception.ValidationException;
 import br.unitins.topicos1.cafe.model.*;
 import br.unitins.topicos1.cafe.repository.*;
@@ -20,7 +18,9 @@ public class CarrinhoServiceImpl {
     @Inject CarrinhoRepository carrinhoRepository;
     @Inject UsuarioRepository usuarioRepository;
     @Inject ProdutoRepository produtoRepository;
+    @Inject EnderecoClienteRepository enderecoRepository;
     @Inject PedidoServiceImpl pedidoService;
+    @Inject PagamentoServiceImpl pagamentoService;
 
     public CarrinhoResponseDTO buscar(String login) {
         return carrinhoRepository.findByUsuarioLogin(login)
@@ -100,23 +100,45 @@ public class CarrinhoServiceImpl {
     }
 
     @Transactional
-    public PedidoResponseDTO checkout(String login) {
+    public CheckoutResponseDTO checkout(String login, CheckoutRequestDTO dto) {
         Carrinho carrinho = carrinhoRepository.findByUsuarioLogin(login)
-                .orElseThrow(() -> new NotFoundException("Carrinho não encontrado"));
+                .orElseThrow(() -> new ValidationException("O carrinho está vazio", "itens"));
 
         if (carrinho.getItens().isEmpty())
             throw new ValidationException("O carrinho está vazio", "itens");
 
-        List<br.unitins.topicos1.cafe.dto.ItemPedidoRequestDTO> itensDTO = carrinho.getItens().stream()
-                .map(i -> new br.unitins.topicos1.cafe.dto.ItemPedidoRequestDTO(
-                        i.getProduto().getId(), i.getQuantidade()))
+        EnderecoCliente endereco = enderecoRepository.findById(dto.enderecoId());
+        if (endereco == null || !endereco.getUsuario().getLogin().equals(login))
+            throw new NotFoundException("Endereço não encontrado");
+
+        String enderecoFormatado = endereco.getRua() + ", " + endereco.getCidade()
+                + "/" + endereco.getUf() + " - CEP: " + endereco.getCep();
+
+        List<ItemPedidoRequestDTO> itensDTO = carrinho.getItens().stream()
+                .map(i -> new ItemPedidoRequestDTO(i.getProduto().getId(), i.getQuantidade()))
                 .collect(Collectors.toList());
 
         PedidoResponseDTO pedido = pedidoService.realizarCompra(login,
-                new br.unitins.topicos1.cafe.dto.PedidoRequestDTO(itensDTO));
+                new PedidoRequestDTO(itensDTO), enderecoFormatado);
+
+        PagamentoResponseDTO pagamento = pagamentoService.pagar(login, pedido.getId(),
+                new PagamentoRequestDTO(dto.formaPagamento(), dto.parcelas()));
 
         carrinho.getItens().clear();
-        return pedido;
+
+        CheckoutResponseDTO response = new CheckoutResponseDTO();
+        response.setPedidoId(pedido.getId());
+        response.setStatusPedido(pedido.getStatus());
+        response.setStatusPagamento(pagamento.getStatus());
+        response.setEnderecoEntrega(enderecoFormatado);
+        response.setDataEntregaPrevista(pedido.getDataEntregaPrevista());
+        response.setFormaPagamento(pagamento.getFormaPagamento());
+        response.setTotal(pagamento.getValor());
+        response.setParcelas(pagamento.getParcelas());
+        response.setValorParcela(pagamento.getValorParcela());
+        response.setCodigoPagamento(pagamento.getCodigoPagamento());
+        response.setDataPagamento(pagamento.getDataPagamento());
+        return response;
     }
 
     private CarrinhoResponseDTO carrinhoVazio() {

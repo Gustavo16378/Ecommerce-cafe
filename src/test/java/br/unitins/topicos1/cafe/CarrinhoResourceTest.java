@@ -126,16 +126,27 @@ public class CarrinhoResourceTest {
             .body("{\"login\":\"carrinho_checkout\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
-        Number produtoId = getProdutoId();
+        // Cria endereço para o checkout
+        Number enderecoId = given()
+            .contentType(ContentType.JSON)
+            .body("{\"rua\":\"Rua Checkout\",\"cidade\":\"Palmas\",\"uf\":\"TO\",\"cep\":\"77001234\"}")
+            .when().post("/usuarios/meus-enderecos")
+            .then().statusCode(201)
+            .extract().path("id");
 
+        Number produtoId = getProdutoId();
         given().contentType(ContentType.JSON).when().post("/carrinho/" + produtoId + "?quantidade=1");
 
         given()
             .contentType(ContentType.JSON)
+            .body("{\"enderecoId\":" + enderecoId + ",\"formaPagamento\":\"PIX\"}")
             .when().post("/carrinho/checkout")
             .then()
             .statusCode(201)
-            .body("status", equalTo("AGUARDANDO_PAGAMENTO"))
+            .body("statusPedido", equalTo("CONFIRMADO"))
+            .body("statusPagamento", equalTo("APROVADO"))
+            .body("codigoPagamento", notNullValue())
+            .body("enderecoEntrega", notNullValue())
             .body("total", greaterThan(0f));
 
         given()
@@ -153,8 +164,16 @@ public class CarrinhoResourceTest {
             .body("{\"login\":\"carrinho_chk_vazio\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
+        Number enderecoId = given()
+            .contentType(ContentType.JSON)
+            .body("{\"rua\":\"Rua X\",\"cidade\":\"Palmas\",\"uf\":\"TO\",\"cep\":\"77000001\"}")
+            .when().post("/usuarios/meus-enderecos")
+            .then().statusCode(201)
+            .extract().path("id");
+
         given()
             .contentType(ContentType.JSON)
+            .body("{\"enderecoId\":" + enderecoId + ",\"formaPagamento\":\"PIX\"}")
             .when().post("/carrinho/checkout")
             .then()
             .statusCode(anyOf(equalTo(404), equalTo(422)));

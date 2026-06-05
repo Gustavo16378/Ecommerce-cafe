@@ -13,8 +13,10 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +28,7 @@ public class PedidoServiceImpl {
     @Inject ProdutoRepository produtoRepository;
 
     @Transactional
-    public PedidoResponseDTO realizarCompra(String login, PedidoRequestDTO dto) {
+    public PedidoResponseDTO realizarCompra(String login, PedidoRequestDTO dto, String enderecoEntrega) {
         Usuario usuario = usuarioRepository.findByLogin(login);
         if (usuario == null) throw new NotFoundException("Usuário não encontrado");
 
@@ -34,6 +36,8 @@ public class PedidoServiceImpl {
         pedido.setUsuario(usuario);
         pedido.setDataPedido(LocalDateTime.now());
         pedido.setStatus(StatusPedido.AGUARDANDO_PAGAMENTO);
+        pedido.setEnderecoEntrega(enderecoEntrega);
+        pedido.setDataEntregaPrevista(LocalDate.now().plusDays(7));
 
         List<ItemPedido> itens = new ArrayList<>();
         for (var itemDTO : dto.itens()) {
@@ -41,9 +45,26 @@ public class PedidoServiceImpl {
             if (produto == null) throw new NotFoundException("Produto não encontrado: " + itemDTO.produtoId());
 
             int estoqueTotal = produto.getLotesEstoque() == null ? 0 :
-                    produto.getLotesEstoque().stream().mapToInt(LoteEstoque::getQuantidade).sum();
+                    produto.getLotesEstoque().stream()
+                        .filter(l -> l.getDataValidade().isAfter(LocalDate.now()))
+                        .mapToInt(LoteEstoque::getQuantidade).sum();
+
             if (estoqueTotal < itemDTO.quantidade()) {
                 throw new ValidationException("Estoque insuficiente para o produto: " + produto.getNome(), "quantidade");
+            }
+
+            // Decrementa estoque FIFO — lotes com validade mais próxima primeiro
+            int restante = itemDTO.quantidade();
+            List<LoteEstoque> lotes = produto.getLotesEstoque().stream()
+                    .filter(l -> l.getDataValidade().isAfter(LocalDate.now()) && l.getQuantidade() > 0)
+                    .sorted(Comparator.comparing(LoteEstoque::getDataValidade))
+                    .collect(Collectors.toList());
+
+            for (LoteEstoque lote : lotes) {
+                if (restante <= 0) break;
+                int debito = Math.min(lote.getQuantidade(), restante);
+                lote.setQuantidade(lote.getQuantidade() - debito);
+                restante -= debito;
             }
 
             ItemPedido item = new ItemPedido();
@@ -57,6 +78,12 @@ public class PedidoServiceImpl {
         pedido.setItens(itens);
         pedidoRepository.persist(pedido);
         return toDTO(pedido);
+    }
+
+    // Mantido para compatibilidade com testes diretos de pedido
+    @Transactional
+    public PedidoResponseDTO realizarCompra(String login, PedidoRequestDTO dto) {
+        return realizarCompra(login, dto, null);
     }
 
     public List<PedidoResponseDTO> historico(String login) {
@@ -89,6 +116,8 @@ public class PedidoServiceImpl {
         dto.setId(pedido.getId());
         dto.setDataPedido(pedido.getDataPedido());
         dto.setStatus(pedido.getStatus().name());
+        dto.setEnderecoEntrega(pedido.getEnderecoEntrega());
+        dto.setDataEntregaPrevista(pedido.getDataEntregaPrevista());
         dto.setItens(itensDTO);
         dto.setTotal(total);
         return dto;

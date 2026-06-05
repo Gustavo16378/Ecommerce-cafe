@@ -1,7 +1,8 @@
 package br.unitins.topicos1.cafe.resource;
 
 import br.unitins.topicos1.cafe.dto.CarrinhoResponseDTO;
-import br.unitins.topicos1.cafe.dto.PedidoResponseDTO;
+import br.unitins.topicos1.cafe.dto.CheckoutRequestDTO;
+import br.unitins.topicos1.cafe.dto.CheckoutResponseDTO;
 import br.unitins.topicos1.cafe.service.CarrinhoServiceImpl;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
@@ -55,8 +56,8 @@ public class CarrinhoResource {
 
     @POST
     @Path("/checkout")
-    public Response checkout() {
-        PedidoResponseDTO pedido = service.checkout(identity.getPrincipal().getName());
-        return Response.status(Response.Status.CREATED).entity(pedido).build();
+    public Response checkout(@jakarta.validation.Valid CheckoutRequestDTO dto) {
+        CheckoutResponseDTO response = service.checkout(identity.getPrincipal().getName(), dto);
+        return Response.status(Response.Status.CREATED).entity(response).build();
     }
 }
