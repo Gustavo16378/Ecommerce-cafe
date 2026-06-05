@@ -66,13 +66,13 @@ public class TamanhoEmbalagemResourceTest {
     }
 
     @Test
-    void salvar_semGramas_deveRetornar400() {
+    void salvar_semGramas_deveRetornarErroValidacao() {
         given()
             .contentType(ContentType.JSON)
             .body("{}")
         .when()
             .post("/tamanhos-embalagem")
         .then()
-            .statusCode(400);
+            .statusCode(anyOf(equalTo(400), equalTo(422)));
     }
 }

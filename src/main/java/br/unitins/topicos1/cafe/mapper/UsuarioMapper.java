@@ -17,6 +17,13 @@ public class UsuarioMapper {
 
     public UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         if (usuario == null) return null;
-        return new UsuarioResponseDTO(usuario.getId(), usuario.getLogin(), usuario.getPerfil());
+        return new UsuarioResponseDTO(
+            usuario.getId(),
+            usuario.getLogin(),
+            usuario.getPerfil(),
+            usuario.getNome(),
+            usuario.getEmail(),
+            usuario.getTelefone()
+        );
     }
 }

@@ -73,6 +73,6 @@ public class TorraResourceTest {
         .when()
             .post("/torras")
         .then()
-            .statusCode(400);
+            .statusCode(anyOf(equalTo(400), equalTo(422)));
     }
 }

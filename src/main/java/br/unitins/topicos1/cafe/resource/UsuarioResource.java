@@ -2,6 +2,7 @@ package br.unitins.topicos1.cafe.resource;
 
 import br.unitins.topicos1.cafe.dto.*;
 import br.unitins.topicos1.cafe.service.UsuarioServiceImpl;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -9,7 +10,6 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public class UsuarioResource {
     UsuarioServiceImpl service;
 
     @Inject
-    JsonWebToken jwt;
+    SecurityIdentity identity;
 
     @GET
     @RolesAllowed("ADMIN")
@@ -79,7 +79,7 @@ public class UsuarioResource {
     @Path("/senha")
     @RolesAllowed({"ADMIN", "USER"})
     public Response alterarSenha(@Valid AlterarSenhaRequestDTO dto) {
-        service.alterarSenha(jwt.getSubject(), dto);
+        service.alterarSenha(identity.getPrincipal().getName(), dto);
         return Response.noContent().build();
     }
 
@@ -97,7 +97,7 @@ public class UsuarioResource {
     @Path("/meu-perfil")
     @RolesAllowed({"ADMIN", "USER"})
     public UsuarioResponseDTO editarPerfil(@Valid EditarPerfilRequestDTO dto) {
-        return service.editarPerfil(jwt.getSubject(), dto);
+        return service.editarPerfil(identity.getPrincipal().getName(), dto);
     }
 
     // Buscar endereços do cliente logado
@@ -105,7 +105,7 @@ public class UsuarioResource {
     @Path("/meus-enderecos")
     @RolesAllowed({"ADMIN", "USER"})
     public List<EnderecoClienteResponseDTO> meusEnderecos() {
-        return service.buscarEnderecosPorCliente(jwt.getSubject());
+        return service.buscarEnderecosPorCliente(identity.getPrincipal().getName());
     }
 
     // Adicionar endereço
@@ -114,7 +114,7 @@ public class UsuarioResource {
     @RolesAllowed({"ADMIN", "USER"})
     public Response adicionarEndereco(@Valid EnderecoClienteRequestDTO dto) {
         return Response.status(Response.Status.CREATED)
-                .entity(service.adicionarEndereco(jwt.getSubject(), dto))
+                .entity(service.adicionarEndereco(identity.getPrincipal().getName(), dto))
                 .build();
     }
 
@@ -123,7 +123,7 @@ public class UsuarioResource {
     @Path("/meus-enderecos/{id}")
     @RolesAllowed({"ADMIN", "USER"})
     public EnderecoClienteResponseDTO atualizarEndereco(@PathParam("id") Long id, @Valid EnderecoClienteRequestDTO dto) {
-        return service.atualizarEndereco(jwt.getSubject(), id, dto);
+        return service.atualizarEndereco(identity.getPrincipal().getName(), id, dto);
     }
 
     // Remover endereço
@@ -131,7 +131,7 @@ public class UsuarioResource {
     @Path("/meus-enderecos/{id}")
     @RolesAllowed({"ADMIN", "USER"})
     public Response removerEndereco(@PathParam("id") Long id) {
-        service.removerEndereco(jwt.getSubject(), id);
+        service.removerEndereco(identity.getPrincipal().getName(), id);
         return Response.noContent().build();
     }
 }

@@ -3,12 +3,12 @@ package br.unitins.topicos1.cafe.resource;
 import br.unitins.topicos1.cafe.dto.CarrinhoResponseDTO;
 import br.unitins.topicos1.cafe.dto.PedidoResponseDTO;
 import br.unitins.topicos1.cafe.service.CarrinhoServiceImpl;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Path("/carrinho")
 @Produces(MediaType.APPLICATION_JSON)
@@ -17,11 +17,11 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 public class CarrinhoResource {
 
     @Inject CarrinhoServiceImpl service;
-    @Inject JsonWebToken jwt;
+    @Inject SecurityIdentity identity;
 
     @GET
     public CarrinhoResponseDTO buscar() {
-        return service.buscar(jwt.getSubject());
+        return service.buscar(identity.getPrincipal().getName());
     }
 
     @POST
@@ -29,7 +29,7 @@ public class CarrinhoResource {
     public CarrinhoResponseDTO adicionarItem(
             @PathParam("produtoId") Long produtoId,
             @QueryParam("quantidade") @DefaultValue("1") Integer quantidade) {
-        return service.adicionarItem(jwt.getSubject(), produtoId, quantidade);
+        return service.adicionarItem(identity.getPrincipal().getName(), produtoId, quantidade);
     }
 
     @PATCH
@@ -37,26 +37,26 @@ public class CarrinhoResource {
     public CarrinhoResponseDTO atualizarQuantidade(
             @PathParam("produtoId") Long produtoId,
             @QueryParam("quantidade") Integer quantidade) {
-        return service.atualizarQuantidade(jwt.getSubject(), produtoId, quantidade);
+        return service.atualizarQuantidade(identity.getPrincipal().getName(), produtoId, quantidade);
     }
 
     @DELETE
     @Path("/{produtoId}")
     public Response removerItem(@PathParam("produtoId") Long produtoId) {
-        service.removerItem(jwt.getSubject(), produtoId);
+        service.removerItem(identity.getPrincipal().getName(), produtoId);
         return Response.noContent().build();
     }
 
     @DELETE
     public Response limpar() {
-        service.limpar(jwt.getSubject());
+        service.limpar(identity.getPrincipal().getName());
         return Response.noContent().build();
     }
 
     @POST
     @Path("/checkout")
     public Response checkout() {
-        PedidoResponseDTO pedido = service.checkout(jwt.getSubject());
+        PedidoResponseDTO pedido = service.checkout(identity.getPrincipal().getName());
         return Response.status(Response.Status.CREATED).entity(pedido).build();
     }
 }

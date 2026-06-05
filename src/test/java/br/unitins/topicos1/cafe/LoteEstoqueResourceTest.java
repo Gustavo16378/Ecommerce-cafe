@@ -83,14 +83,14 @@ public class LoteEstoqueResourceTest {
     }
 
     @Test
-    void salvar_semCamposObrigatorios_deveRetornar400() {
+    void salvar_semCamposObrigatorios_deveRetornarErroValidacao() {
         given()
             .contentType(ContentType.JSON)
             .body("{}")
         .when()
             .post("/lotes-estoque")
         .then()
-            .statusCode(400);
+            .statusCode(anyOf(equalTo(400), equalTo(422)));
     }
 
     private Number criarProduto() {

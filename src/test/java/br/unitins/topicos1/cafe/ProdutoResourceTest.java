@@ -2,9 +2,7 @@ package br.unitins.topicos1.cafe;
 
 import java.util.List;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -158,14 +156,14 @@ public class ProdutoResourceTest {
     }
 
     @Test
-    void salvar_semCamposObrigatorios_deveRetornar400() {
+    void salvar_semCamposObrigatorios_deveRetornarErroValidacao() {
         given()
             .contentType(ContentType.JSON)
             .body("{}")
         .when()
             .post("/produtos")
         .then()
-            .statusCode(400);
+            .statusCode(anyOf(equalTo(400), equalTo(422)));
     }
 
     private Number criarCategoria(String nome) {

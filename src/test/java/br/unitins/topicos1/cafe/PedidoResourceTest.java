@@ -11,12 +11,18 @@ import io.restassured.http.ContentType;
 @QuarkusTest
 public class PedidoResourceTest {
 
+    private Number getProdutoId() {
+        return given()
+            .when().get("/ecommerce/produtos")
+            .then().statusCode(200)
+            .extract().path("[0].id");
+    }
+
     @Test
-    @TestSecurity(user = "pedido_user", roles = {"USER"})
+    @TestSecurity(user = "pedido_hist", roles = {"USER"})
     void historico_deveRetornar200() {
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"login\":\"pedido_user\",\"senha\":\"senha123\"}")
+        given().contentType(ContentType.JSON)
+            .body("{\"login\":\"pedido_hist\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
         given()
@@ -27,25 +33,17 @@ public class PedidoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "pedido_user2", roles = {"USER"})
+    @TestSecurity(user = "pedido_compra", roles = {"USER"})
     void realizarCompra_deveFuncionar() {
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"login\":\"pedido_user2\",\"senha\":\"senha123\"}")
+        given().contentType(ContentType.JSON)
+            .body("{\"login\":\"pedido_compra\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
-        Number produtoId = criarProdutoAtivo("Cafe Pedido", "55555555555555");
-
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"produtoId\":" + produtoId + ",\"quantidade\":100,\"dataValidade\":\"2027-01-01\"}")
-            .when().post("/lotes-estoque")
-            .then().statusCode(201);
-
-        String pedidoBody = "{\"itens\":[{\"produtoId\":" + produtoId + ",\"quantidade\":1}]}";
+        Number produtoId = getProdutoId();
+        String body = "{\"itens\":[{\"produtoId\":" + produtoId + ",\"quantidade\":1}]}";
 
         Number pedidoId = given()
-            .contentType(ContentType.JSON).body(pedidoBody)
+            .contentType(ContentType.JSON).body(body)
             .when().post("/pedidos")
             .then()
             .statusCode(201)
@@ -62,11 +60,10 @@ public class PedidoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "pedido_user3", roles = {"USER"})
+    @TestSecurity(user = "pedido_vazio", roles = {"USER"})
     void realizarCompra_semItens_deveRetornarErro() {
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"login\":\"pedido_user3\",\"senha\":\"senha123\"}")
+        given().contentType(ContentType.JSON)
+            .body("{\"login\":\"pedido_vazio\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
         given()
@@ -77,40 +74,15 @@ public class PedidoResourceTest {
     }
 
     @Test
-    @TestSecurity(user = "pedido_user4", roles = {"USER"})
+    @TestSecurity(user = "pedido_404", roles = {"USER"})
     void buscarPedidoInexistente_deveRetornar404() {
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"login\":\"pedido_user4\",\"senha\":\"senha123\"}")
+        given().contentType(ContentType.JSON)
+            .body("{\"login\":\"pedido_404\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
         given()
             .when().get("/pedidos/99999")
             .then()
             .statusCode(404);
-    }
-
-    @TestSecurity(user = "admin", roles = {"ADMIN"})
-    private Number criarProdutoAtivo(String nome, String cnpj) {
-        Number catId = given().contentType(ContentType.JSON).body("{\"nome\":\"Cat Pedido\"}")
-            .when().post("/categorias").then().statusCode(201).extract().path("id");
-        Number torraId = given().contentType(ContentType.JSON).body("{\"tipo\":\"ESCURA\"}")
-            .when().post("/torras").then().statusCode(201).extract().path("id");
-        Number tamId = given().contentType(ContentType.JSON).body("{\"gramas\":400}")
-            .when().post("/tamanhos-embalagem").then().statusCode(201).extract().path("id");
-        Number matId = given().contentType(ContentType.JSON).body("{\"nome\":\"Metal\"}")
-            .when().post("/materiais-embalagem").then().statusCode(201).extract().path("id");
-        String fBody = "{\"nome\":\"FornPedido\",\"cnpj\":\"" + cnpj + "\","
-            + "\"contato\":\"c@c.com\","
-            + "\"endereco\":{\"rua\":\"R2\",\"cidade\":\"P2\",\"uf\":\"TO\",\"cep\":\"77000002\"}}";
-        Number fornId = given().contentType(ContentType.JSON).body(fBody)
-            .when().post("/fornecedores").then().statusCode(201).extract().path("id");
-
-        String pBody = "{\"nome\":\"" + nome + "\",\"descricao\":\"desc\",\"preco\":30.0,"
-            + "\"ativo\":true,\"torraId\":" + torraId + ",\"tamanhoEmbalagemId\":" + tamId
-            + ",\"materialEmbalagemId\":" + matId + ",\"categoriasIds\":[" + catId + "]"
-            + ",\"fornecedorId\":" + fornId + "}";
-        return given().contentType(ContentType.JSON).body(pBody)
-            .when().post("/produtos").then().statusCode(201).extract().path("id");
     }
 }

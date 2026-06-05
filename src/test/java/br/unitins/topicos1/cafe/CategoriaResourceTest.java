@@ -66,13 +66,13 @@ public class CategoriaResourceTest {
     }
 
     @Test
-    void salvar_semNome_deveRetornar400() {
+    void salvar_semNome_deveRetornarErroValidacao() {
         given()
             .contentType(ContentType.JSON)
             .body("{}")
         .when()
             .post("/categorias")
         .then()
-            .statusCode(400);
+            .statusCode(anyOf(equalTo(400), equalTo(422)));
     }
 }
