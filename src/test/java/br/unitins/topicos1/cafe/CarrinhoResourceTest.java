@@ -13,7 +13,7 @@ public class CarrinhoResourceTest {
 
     @Test
     @TestSecurity(user = "carrinho_user", roles = {"USER"})
-    void buscar_semCarrinho_deveRetornar404() {
+    void buscar_semCarrinho_deveRetornarCarrinhoVazio() {
         given()
             .contentType(ContentType.JSON)
             .body("{\"login\":\"carrinho_user\",\"senha\":\"senha123\"}")
@@ -22,7 +22,9 @@ public class CarrinhoResourceTest {
         given()
             .when().get("/carrinho")
             .then()
-            .statusCode(404);
+            .statusCode(200)
+            .body("itens", hasSize(0))
+            .body("total", equalTo(0.0f));
     }
 
     @Test
@@ -42,25 +44,80 @@ public class CarrinhoResourceTest {
             .body("itens", hasSize(1))
             .body("itens[0].quantidade", equalTo(2))
             .body("total", greaterThan(0f));
+    }
 
+    @Test
+    @TestSecurity(user = "carrinho_user3", roles = {"USER"})
+    void adicionarMesmoItem_deveAcumularQuantidade() {
         given()
-            .when().get("/carrinho")
+            .contentType(ContentType.JSON)
+            .body("{\"login\":\"carrinho_user3\",\"senha\":\"senha123\"}")
+            .when().post("/usuarios/cadastro/simples");
+
+        Number produtoId = criarProdutoComEstoque("Cafe Acumulo", "66666666666667");
+
+        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
+        given()
+            .when().post("/carrinho/" + produtoId + "?quantidade=2")
             .then()
             .statusCode(200)
-            .body("itens", hasSize(1));
+            .body("itens[0].quantidade", equalTo(3));
+    }
+
+    @Test
+    @TestSecurity(user = "carrinho_user4", roles = {"USER"})
+    void removerItem_deveFuncionar() {
+        given()
+            .contentType(ContentType.JSON)
+            .body("{\"login\":\"carrinho_user4\",\"senha\":\"senha123\"}")
+            .when().post("/usuarios/cadastro/simples");
+
+        Number produtoId = criarProdutoComEstoque("Cafe Remover", "66666666666668");
+
+        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
 
         given()
             .when().delete("/carrinho/" + produtoId)
             .then()
             .statusCode(204);
+
+        given()
+            .when().get("/carrinho")
+            .then()
+            .statusCode(200)
+            .body("itens", hasSize(0));
     }
 
     @Test
-    @TestSecurity(user = "carrinho_user3", roles = {"USER"})
+    @TestSecurity(user = "carrinho_user5", roles = {"USER"})
+    void limpar_deveEsvaziarCarrinho() {
+        given()
+            .contentType(ContentType.JSON)
+            .body("{\"login\":\"carrinho_user5\",\"senha\":\"senha123\"}")
+            .when().post("/usuarios/cadastro/simples");
+
+        Number produtoId = criarProdutoComEstoque("Cafe Limpar", "66666666666669");
+
+        given().when().post("/carrinho/" + produtoId + "?quantidade=1");
+
+        given()
+            .when().delete("/carrinho")
+            .then()
+            .statusCode(204);
+
+        given()
+            .when().get("/carrinho")
+            .then()
+            .statusCode(200)
+            .body("itens", hasSize(0));
+    }
+
+    @Test
+    @TestSecurity(user = "carrinho_user6", roles = {"USER"})
     void checkout_deveCriarPedido() {
         given()
             .contentType(ContentType.JSON)
-            .body("{\"login\":\"carrinho_user3\",\"senha\":\"senha123\"}")
+            .body("{\"login\":\"carrinho_user6\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
         Number produtoId = criarProdutoComEstoque("Cafe Checkout", "77777777777777");
@@ -73,20 +130,34 @@ public class CarrinhoResourceTest {
             .statusCode(201)
             .body("status", equalTo("AGUARDANDO_PAGAMENTO"))
             .body("total", greaterThan(0f));
+
+        given()
+            .when().get("/carrinho")
+            .then()
+            .statusCode(200)
+            .body("itens", hasSize(0));
     }
 
     @Test
-    @TestSecurity(user = "carrinho_user4", roles = {"USER"})
+    @TestSecurity(user = "carrinho_user7", roles = {"USER"})
     void checkout_carrinhoVazio_deveRetornarErro() {
         given()
             .contentType(ContentType.JSON)
-            .body("{\"login\":\"carrinho_user4\",\"senha\":\"senha123\"}")
+            .body("{\"login\":\"carrinho_user7\",\"senha\":\"senha123\"}")
             .when().post("/usuarios/cadastro/simples");
 
         given()
             .when().post("/carrinho/checkout")
             .then()
             .statusCode(anyOf(equalTo(404), equalTo(422)));
+    }
+
+    @Test
+    void buscar_semAutenticacao_deveRetornar401() {
+        given()
+            .when().get("/carrinho")
+            .then()
+            .statusCode(401);
     }
 
     @TestSecurity(user = "admin", roles = {"ADMIN"})

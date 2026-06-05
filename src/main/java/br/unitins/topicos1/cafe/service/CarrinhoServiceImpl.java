@@ -23,9 +23,9 @@ public class CarrinhoServiceImpl {
     @Inject PedidoServiceImpl pedidoService;
 
     public CarrinhoResponseDTO buscar(String login) {
-        Carrinho carrinho = carrinhoRepository.findByUsuarioLogin(login)
-                .orElseThrow(() -> new NotFoundException("Carrinho não encontrado"));
-        return toDTO(carrinho);
+        return carrinhoRepository.findByUsuarioLogin(login)
+                .map(this::toDTO)
+                .orElse(carrinhoVazio());
     }
 
     @Transactional
@@ -117,6 +117,14 @@ public class CarrinhoServiceImpl {
 
         carrinho.getItens().clear();
         return pedido;
+    }
+
+    private CarrinhoResponseDTO carrinhoVazio() {
+        CarrinhoResponseDTO dto = new CarrinhoResponseDTO();
+        dto.setId(null);
+        dto.setItens(List.of());
+        dto.setTotal(0.0);
+        return dto;
     }
 
     private CarrinhoResponseDTO toDTO(Carrinho carrinho) {
