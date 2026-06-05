@@ -1,0 +1,94 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+enum TipoCafe {
+  GRAO
+  MOIDO
+  CAPSULA
+}
+
+enum TipoTorra {
+  CLARA
+  MEDIA
+  ESCURA
+}
+
+enum TipoMoagem {
+  FINA
+  MEDIA
+  GROSSA
+}
+
+class Produto {
+  -id: Long
+  -nome: String
+  -descricao: String
+  -preco: Double
+  -ativo: Boolean
+}
+
+class ProdutoCafe {
+  -tipoCafe: TipoCafe
+  -tipoMoagem: TipoMoagem
+}
+
+class Categoria {
+  -id: Long
+  -nome: String
+}
+
+class Torra {
+  -id: Long
+  -tipo: TipoTorra
+}
+
+class TamanhoEmbalagem {
+  -id: Long
+  -gramas: Integer
+}
+
+class MaterialEmbalagem {
+  -id: Long
+  -nome: String
+}
+
+class Fornecedor {
+  -id: Long
+  -nome: String
+  -cnpj: String
+  -contato: String
+}
+
+class LoteEstoque {
+  -id: Long
+  -quantidade: Integer
+  -dataValidade: Date
+}
+
+class EnderecoFornecedor {
+  -rua: String
+  -cidade: String
+  -uf: String
+  -cep: String
+}
+
+Produto <|-- ProdutoCafe : herança
+
+Produto "1..1" -- "1..1" Torra : associação
+Produto "1..1" -- "1..1" TamanhoEmbalagem : associação
+Produto "1..1" -- "1..1" MaterialEmbalagem : associação
+
+Produto "1..*" -- "1..*" Categoria : associação
+
+Fornecedor "1..1" o-- "1..*" Produto : agregação
+
+Produto "1..1" *-- "1..*" LoteEstoque : composição
+
+Fornecedor "1..1" *-- "1..1" EnderecoFornecedor : composição
+
+' dependências com enums (opcional, só para explicitar)
+ProdutoCafe ..> TipoCafe : usa
+ProdutoCafe ..> TipoMoagem : usa
+Torra ..> TipoTorra : usa
+
+@enduml

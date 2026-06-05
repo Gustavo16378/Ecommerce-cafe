@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+actor "Administrador" as Admin
+
+rectangle "Sistema Admin E-commerce de Café" {
+
+  package "Cadastros (CRUDs)" {
+    usecase "CRUD Produto" as UC1
+    usecase "CRUD Categoria" as UC2
+    usecase "CRUD Torra" as UC3
+    usecase "CRUD Tamanho Embalagem" as UC4
+    usecase "CRUD Material Embalagem" as UC5
+    usecase "CRUD Fornecedor" as UC6
+    usecase "CRUD Lote de Estoque" as UC7
+  }
+
+  package "Regras Administrativas" {
+    usecase "Associar Produto a Categoria" as UC8
+    usecase "Definir Torra e Tamanho do Produto" as UC9
+  }
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+@enduml
