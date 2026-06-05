@@ -46,6 +46,7 @@ public class CarrinhoResourceTest {
         Number produtoId = getProdutoId();
 
         given()
+            .contentType(ContentType.JSON)
             .when().post("/carrinho/" + produtoId + "?quantidade=2")
             .then()
             .statusCode(200)
@@ -66,6 +67,7 @@ public class CarrinhoResourceTest {
 
         given().contentType(ContentType.JSON).when().post("/carrinho/" + produtoId + "?quantidade=1");
         given()
+            .contentType(ContentType.JSON)
             .when().post("/carrinho/" + produtoId + "?quantidade=2")
             .then()
             .statusCode(200)
