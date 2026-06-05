@@ -62,7 +62,7 @@ public class UsuarioResourceTest {
         // Usa o cliente do seed que já tem email cadastrado
         given()
             .contentType(ContentType.JSON)
-            .body("{\"email\":\"joao@email.com\",\"novaSenha\":\"novaSenha456\"}")
+            .body("{\"email\":\"joao@email.com\"}")
             .when().patch("/usuarios/esqueceu-senha")
             .then()
             .statusCode(200)

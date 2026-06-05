@@ -16,6 +16,7 @@ import jakarta.ws.rs.NotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -79,9 +80,12 @@ public class UsuarioServiceImpl {
     public String esqueceuSenha(EsqueceuSenhaRequestDTO dto) {
         Usuario usuario = repository.findByEmail(dto.email());
         if (usuario == null) throw new NotFoundException("Email não cadastrado");
-        usuario.setSenha(BcryptUtil.bcryptHash(dto.novaSenha()));
-        // Em produção: enviar email com código de recuperação via SMTP (Jakarta Mail)
-        return "Instruções de recuperação enviadas para " + dto.email();
+        // Gera senha temporária e atualiza
+        String senhaTemp = UUID.randomUUID().toString().substring(0, 8);
+        usuario.setSenha(BcryptUtil.bcryptHash(senhaTemp));
+        // Em produção: enviar via SMTP (Jakarta Mail) um link com token de redefinição
+        // Aqui retornamos a senha temp para fins de demonstração
+        return "Instruções enviadas para " + dto.email() + " — senha temporária: " + senhaTemp;
     }
 
     @Transactional
