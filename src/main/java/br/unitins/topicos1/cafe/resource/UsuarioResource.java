@@ -88,8 +88,8 @@ public class UsuarioResource {
     @Path("/esqueceu-senha")
     @PermitAll
     public Response esqueceuSenha(@Valid EsqueceuSenhaRequestDTO dto) {
-        service.esqueceuSenha(dto);
-        return Response.noContent().build();
+        String mensagem = service.esqueceuSenha(dto);
+        return Response.ok(mensagem).build();
     }
 
     // Editar dados do próprio perfil (usuário logado)

@@ -76,10 +76,12 @@ public class UsuarioServiceImpl {
     }
 
     @Transactional
-    public void esqueceuSenha(EsqueceuSenhaRequestDTO dto) {
-        Usuario usuario = repository.findByLogin(dto.login());
-        if (usuario == null) throw new NotFoundException("Usuário não encontrado");
+    public String esqueceuSenha(EsqueceuSenhaRequestDTO dto) {
+        Usuario usuario = repository.findByEmail(dto.email());
+        if (usuario == null) throw new NotFoundException("Email não cadastrado");
         usuario.setSenha(BcryptUtil.bcryptHash(dto.novaSenha()));
+        // Em produção: enviar email com código de recuperação via SMTP (Jakarta Mail)
+        return "Instruções de recuperação enviadas para " + dto.email();
     }
 
     @Transactional

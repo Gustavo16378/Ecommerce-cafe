@@ -58,18 +58,15 @@ public class UsuarioResourceTest {
     // ---------- Senha ----------
 
     @Test
-    void esqueceuSenha_deveRetornar204() {
+    void esqueceuSenha_deveRetornar200ComMensagem() {
+        // Usa o cliente do seed que já tem email cadastrado
         given()
             .contentType(ContentType.JSON)
-            .body("{\"login\":\"cliente_esq\",\"senha\":\"senha123\"}")
-            .when().post("/usuarios/cadastro/simples");
-
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"login\":\"cliente_esq\",\"novaSenha\":\"novaSenha456\"}")
+            .body("{\"email\":\"joao@email.com\",\"novaSenha\":\"novaSenha456\"}")
             .when().patch("/usuarios/esqueceu-senha")
             .then()
-            .statusCode(204);
+            .statusCode(200)
+            .body(containsString("Instruções de recuperação enviadas"));
     }
 
     @Test
